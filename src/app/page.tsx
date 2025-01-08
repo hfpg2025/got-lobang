@@ -1,51 +1,71 @@
-import Link from "next/link";
 
-import { LatestPost } from "@/app/_components/post";
-import { api, HydrateClient } from "@/trpc/server";
+import { HydrateClient } from "@/trpc/server";
+import { EmailFilterInput } from "./_components/email-filter-input";
 
-export default async function Home() {
-  const hello = await api.post.hello({ text: "from tRPC" });
+const MATCHES_URL = 'https://raw.githubusercontent.com/LoneRifle/crimbo/main/matches.json'
 
-  void api.post.getLatest.prefetch();
+type RequestMatch = Record<string, string> & {
+  contact: Record<string, string>
+  matches: {
+    passiton: Record<string, string>[]
+    carousell: Record<string, string>[]
+  }
+}
 
+const linkPassItOn = (id?: string) => 
+  `https://www.passiton.org.sg/item-list?search_by=id&search_id=${id}`
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const email = searchParams?.email as string | undefined
+  const matches: RequestMatch[] = await (await fetch(MATCHES_URL)).json()
+  const displayedMatches = email ? matches.filter(entry => entry.contact.email?.includes(email)) : matches
   return (
     <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#15162c] to-[#15162c] text-white">
+        <div className="container flex flex-col items-center justify-center gap-4 py-16">
           <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
+            Got <span className="text-[hsl(280,100%,70%)]">Lobang</span>?
           </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
+          <h1 className="text-3xl tracking-tight p-6">
+            The latest item matches on PassItOn
+          </h1>
+          <EmailFilterInput />
+          <div
+            className="w-full flex flex-col gap-4 rounded-xl bg-white/5 p-4"
+          >
+            <div>
+              {
+                displayedMatches.length === 0 
+                  ? <div className="px-2">No Matches Found</div>
+                  : displayedMatches.map((entry) => (
+                    <div key={entry.id} className="p-2 my-2 rounded-lg bg-white/5">
+                      <div className="font-bold">{entry.id} - {entry.name}</div>
+                      <div className="text-sm grid grid-cols-1 sm:grid-cols-2">
+                        <span>{entry.contact?.email}</span><span>{entry.contact?.org}</span>
+                      </div>
+                      <div className="text-xs">
+                        {entry.description}
+                      </div>
+                      <div className="ml-4">
+                        {entry.matches.passiton.map(match => {
+                          return (<div key={match.id} className="my-2">
+                            <div className="text-sm">
+                              <span className="font-bold">{match.id} - {match.name}</span> (<a href={linkPassItOn(match.id)} target="_blank">PassItOn &#x1F517;</a>)
+                            </div>
+                            <div className="text-sm italic">{match.location}</div>
+                            <div className="text-sm">{match.description}</div>
+                          </div>)
+                        })}
+                      </div>
+                    </div>
+                  ))
+              }
+            </div>
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-2xl text-white">
-              {hello ? hello.greeting : "Loading tRPC query..."}
-            </p>
-          </div>
-
-          <LatestPost />
         </div>
       </main>
     </HydrateClient>
