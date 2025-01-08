@@ -1,6 +1,7 @@
 
 import { HydrateClient } from "@/trpc/server";
 import { EmailFilterInput } from "./_components/email-filter-input";
+import { metadata } from "./layout";
 
 const MATCHES_URL = 'https://raw.githubusercontent.com/LoneRifle/crimbo/main/matches.json'
 
@@ -31,7 +32,7 @@ export default async function Home({
             Got <span className="text-[hsl(280,100%,70%)]">Lobang</span>?
           </h1>
           <h1 className="text-3xl tracking-tight p-6">
-            The latest item matches on PassItOn
+            {metadata.description}
           </h1>
           <EmailFilterInput />
           <div
