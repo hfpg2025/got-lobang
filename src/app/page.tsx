@@ -45,7 +45,7 @@ export default async function Home({
                     <div key={entry.id} className="p-2 my-2 rounded-lg bg-white/5">
                       <div className="font-bold">{entry.id} - {entry.name}</div>
                       <div className="text-sm grid grid-cols-1 sm:grid-cols-2">
-                        <span>{entry.contact?.email}</span><span>{entry.contact?.org}</span>
+                        <span>&#x2709; {entry.contact?.email}</span><span>&#x1F3E2; {entry.contact?.org}</span>
                       </div>
                       <div className="text-xs">
                         {entry.description}
