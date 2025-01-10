@@ -24,15 +24,17 @@ export const EmailFilterInput = () => {
     router.push(`/?email=${newEmail}`)
   }
   return (
-    <div className="w-full">
-      <form onSubmit={onSubmit} className="w-fit px-6 grid grid-cols-2 gap-4">
+    <div className="w-full px-6">
+      <div className="font-bold">Are you a PassItOn User?</div>
+      <div className="text-xs pb-1">See if you have any matches by entering your email address below</div>
+      <form onSubmit={onSubmit} className="w-full grid grid-cols-2 gap-4">
         <input 
           className="text-black p-1 rounded-md"
           type="text"
           name="email"
           value={value}
           onChange={handleChange}
-          placeholder="Filter by email"
+          placeholder="eg user@saa.org.sg, fsc.org.sg etc"
         />
         <button className="w-fit py-1 px-2 border-2 rounded-md" type="submit">Go</button>
       </form>
