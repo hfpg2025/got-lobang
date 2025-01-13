@@ -3,6 +3,7 @@ import { HydrateClient } from "@/trpc/server";
 import { EmailFilterInput } from "./_components/email-filter-input";
 import { metadata } from "./layout";
 import { EntryDescription } from "./_components/entry-description";
+import Link from "next/link";
 
 const MATCHES_URL = 'https://raw.githubusercontent.com/LoneRifle/crimbo/main/matches.json'
 
@@ -24,8 +25,9 @@ export default async function Home({
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
   const email = searchParams?.email as string | undefined
+  const showAll = searchParams?.showAll as string | undefined
   const matches: RequestMatch[] = await (await fetch(MATCHES_URL)).json()
-  const displayedMatches = email ? matches.filter(entry => entry.contact.email?.includes(email)) : matches
+  const displayedMatches = email ? matches.filter(entry => entry.contact.email?.includes(email)) : (showAll ? matches : [])
   return (
     <HydrateClient>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#15162c] to-[#15162c] text-white">
@@ -41,9 +43,10 @@ export default async function Home({
             className="w-full flex flex-col gap-4 rounded-xl bg-white/5 p-4"
           >
             <div>
+              {!email && !showAll && <Link href="?showAll=true" className="px-2 text-xs text-slate-400">See all matches</Link>}
               {
                 displayedMatches.length === 0 
-                  ? <div className="px-2">No Matches Found</div>
+                  ? email && <div className="px-2">No Matches Found</div>
                   : displayedMatches.map((entry) => {
                     return <div key={entry.id} className="p-2 my-2 rounded-lg bg-white/5">
                       <div className="font-bold">{entry.id} - {entry.name}</div>
