@@ -6,8 +6,16 @@ import { EntryDescription } from "./_components/entry-description";
 import Link from "next/link";
 
 const MATCHES_URL = 'https://raw.githubusercontent.com/LoneRifle/crimbo/main/matches.json'
+const REQUESTS_URL = 'https://raw.githubusercontent.com/LoneRifle/crimbo/main/requests.json'
 
-type RequestMatch = Record<string, string> & {
+type ItemRequest = Record<string, string> & {
+  id: string
+  description: string
+  contact: Record<string, string>
+}
+
+type RequestMatch = ItemRequest & {
+  id: string
   description: string
   contact: Record<string, string>
   matches: {
@@ -27,7 +35,13 @@ export default async function Home({
   const email = searchParams?.email as string | undefined
   const showAll = searchParams?.showAll as string | undefined
   const matches: RequestMatch[] = await (await fetch(MATCHES_URL)).json()
-  const displayedMatches = email ? matches.filter(entry => entry.contact.email?.includes(email)) : (showAll ? matches : [])
+  const requests: ItemRequest[] = await (await fetch(REQUESTS_URL)).json()
+  const displayedMatches = email
+    ? matches.filter(entry => entry.contact.email?.includes(email))
+    : (showAll ? matches : [])
+  const displayedRequests = email
+    ? requests.filter(entry => entry.contact.email?.includes(email) && !matches.some(({ id }) => id === entry.id))
+    : []
   return (
     <HydrateClient>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#15162c] to-[#15162c] text-white">
@@ -43,10 +57,10 @@ export default async function Home({
             className="w-full flex flex-col gap-4 rounded-xl bg-white/5 p-4"
           >
             <div>
-              {!email && !showAll && <Link href="?showAll=true" className="px-2 text-xs text-slate-400">See all matches</Link>}
+              {email ? <div className="px-2 text-xl font-bold">Matches</div> : (!showAll && <Link href="?showAll=true" className="px-2 text-xs text-slate-400">See all matches</Link>)}
               {
                 displayedMatches.length === 0 
-                  ? email && <div className="px-2">No Matches Found</div>
+                  ? email && <div className="px-2 italic">No Matches Found</div>
                   : displayedMatches.map((entry) => {
                     return <div key={entry.id} className="p-2 my-2 rounded-lg bg-white/5">
                       <div className="font-bold">{entry.id} - {entry.name}</div>
@@ -70,6 +84,28 @@ export default async function Home({
               }
             </div>
           </div>
+          {email &&
+            <div
+              className="w-full flex flex-col gap-4 rounded-xl bg-white/5 p-4"
+            >
+              <div>
+                <div className="px-2 text-xl font-bold">Unmatched Requests</div>
+                {
+                  displayedRequests.length === 0
+                    ? email && <div className="px-2 italic">No Unmatched Requests</div>
+                    : displayedRequests.map((entry) => {
+                      return <div key={entry.id} className="p-2 my-2 rounded-lg bg-white/5">
+                        <div className="font-bold">{entry.id} - {entry.name}</div>
+                        <div className="text-sm grid grid-cols-1">
+                          <span>&#x2709; {entry.contact?.email}</span><span>&#x1F3E2; {entry.contact?.org}</span>
+                        </div>
+                        <EntryDescription {...entry} />
+                      </div>
+                    })
+                }
+              </div>
+            </div>
+          }
         </div>
       </main>
     </HydrateClient>
