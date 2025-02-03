@@ -10,13 +10,12 @@ const REQUESTS_URL = 'https://raw.githubusercontent.com/LoneRifle/crimbo/main/re
 
 type ItemRequest = Record<string, string> & {
   id: string
+  name: string
   description: string
   contact: Record<string, string>
 }
 
 type RequestMatch = ItemRequest & {
-  id: string
-  description: string
   contact: Record<string, string>
   matches: {
     passiton: Record<string, string>[]
@@ -26,6 +25,40 @@ type RequestMatch = ItemRequest & {
 
 const linkPassItOn = (id?: string) => 
   `https://www.passiton.org.sg/item-list?search_by=id&search_id=${id}`
+
+const findItemOnCarousell = {
+  action: 'Find the item',
+  name: 'Carousell',
+  href: (entry: ItemRequest) => `https://www.carousell.sg/categories/free-items-1898/?search=-wtb%20-wtt%20-wts%20-fwp%20${encodeURIComponent(entry.name)}`,
+}
+
+const SEARCH_SUGGESTIONS_BY_NAME = {
+  bicycle: {
+    action: 'Make a request',
+    name: 'Bike Shack',
+    href: (_ignored: ItemRequest) => 'https://thebikeshack.org/pages/request-free-bike',
+  },
+  laptop: {
+    action: 'Make a request',
+    name: 'Engineering Good',
+    href: (_ignored: ItemRequest) => 'https://www.engineeringgood.org/contact-faq/',
+  },
+  cabinet: findItemOnCarousell,
+  cupboard: findItemOnCarousell,
+  wardrobe: findItemOnCarousell,
+  bed: findItemOnCarousell,
+  sofa: findItemOnCarousell,
+  'tv console': findItemOnCarousell,
+  'washing machine': findItemOnCarousell,
+  fridge: findItemOnCarousell,
+  refrigerator: findItemOnCarousell,
+  drawers: findItemOnCarousell,
+}
+
+const suggestSearch = (entry: ItemRequest) => {
+  const [, suggestion] = Object.entries(SEARCH_SUGGESTIONS_BY_NAME).find(([k]) => entry.name.match(new RegExp(k, 'i'))) ?? []
+  return suggestion ?? null
+}
 
 export default async function Home({
   searchParams,
@@ -62,6 +95,7 @@ export default async function Home({
                 displayedMatches.length === 0 
                   ? email && <div className="px-2 italic">No Matches Found</div>
                   : displayedMatches.map((entry) => {
+                    const suggestion = suggestSearch(entry)
                     return <div key={entry.id} className="p-2 my-2 rounded-lg bg-white/5">
                       <div className="font-bold">{entry.id} - {entry.name}</div>
                       <div className="text-sm grid grid-cols-1">
@@ -69,6 +103,7 @@ export default async function Home({
                         <span>&#x1F3E2; {entry.contact?.org}</span>
                       </div>
                       <EntryDescription {...entry} />
+                      {suggestion ? <div className="text-xs italic">Can&apos;t find a match? {suggestion.action} on <a className="underline not-italic" href={suggestion.href(entry)} target="_blank">{suggestion.name}</a>.</div> : null}
                       <div className="ml-4">
                         {entry.matches.passiton.map(match => {
                           return (<div key={match.id} className="my-2">
@@ -95,12 +130,14 @@ export default async function Home({
                   displayedRequests.length === 0
                     ? email && <div className="px-2 italic">No Unmatched Requests</div>
                     : displayedRequests.map((entry) => {
+                      const suggestion = suggestSearch(entry)
                       return <div key={entry.id} className="p-2 my-2 rounded-lg bg-white/5">
                         <div className="font-bold">{entry.id} - {entry.name}</div>
                         <div className="text-sm grid grid-cols-1">
                           <span>&#x2709; <Link href={`?email=${entry.contact?.email}`}>{entry.contact?.email}</Link></span><span>&#x1F3E2; {entry.contact?.org}</span>
                         </div>
                         <EntryDescription {...entry} />
+                        {suggestion ? <div className="text-xs italic">Can&apos;t find a match? {suggestion.action} on <a className="underline not-italic" href={suggestion.href(entry)} target="_blank">{suggestion.name}</a>.</div> : null}
                       </div>
                     })
                 }
